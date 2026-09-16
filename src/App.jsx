@@ -264,9 +264,6 @@ export default function App() {
         <div>
           {/* Header & Logo */}
           <div className="h-16 flex items-center px-6 border-b border-slate-200 dark:border-slate-800 gap-3">
-            <div className="w-8 h-8 rounded-lg bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-900 flex items-center justify-center font-bold text-sm tracking-widest shadow-sm">
-              ATS
-            </div>
             <div>
               <h1 className="font-semibold text-sm text-slate-900 dark:text-white tracking-tight">Hiring Suite</h1>
               <p className="text-[11px] text-slate-400">Enterprise Talent Pipeline</p>
@@ -284,7 +281,7 @@ export default function App() {
               }`}
             >
               <Icons.Kanban />
-              Pipeline Kanban
+              Pipeline
             </button>
 
             <button
@@ -380,15 +377,8 @@ export default function App() {
             />
           </div>
 
-          {/* Action Header Items */}
           <div className="flex items-center gap-3">
             
-            {/* Google Drive Connector Status */}
-            <div className="flex items-center gap-2 px-3 py-1.5 rounded-md border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/40 text-xs text-slate-600 dark:text-slate-300">
-              <Icons.GoogleDrive />
-              <span className="font-medium text-[11px]">Google Drive Connected</span>
-            </div>
-
             {isRecruiter && (
               <>
                 <button
@@ -434,7 +424,6 @@ export default function App() {
             </div>
           </div>
 
-          {/* TAB 1: KANBAN BOARD */}
           {activeTab === 'pipeline' && (
             <div>
               <div className="flex items-center justify-between mb-4">

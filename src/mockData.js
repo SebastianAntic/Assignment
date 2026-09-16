@@ -13,6 +13,7 @@ export const INITIAL_USERS = [
     id: 'usr_recruiter_1',
     name: 'Sarah Jenkins',
     email: 'sarah.jenkins@company.com',
+    phone: '+1 (555) 987-6543',
     role: 'Recruiter',
     title: 'Lead Talent Acquisition Partner',
     avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150'
@@ -21,6 +22,7 @@ export const INITIAL_USERS = [
     id: 'usr_interviewer_1',
     name: 'Alex Chen',
     email: 'alex.chen@company.com',
+    phone: '+1 (555) 876-5432',
     role: 'Interviewer',
     title: 'Staff Frontend Engineer',
     avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150'
@@ -29,6 +31,7 @@ export const INITIAL_USERS = [
     id: 'usr_interviewer_2',
     name: 'Maria Rodriguez',
     email: 'maria.rodriguez@company.com',
+    phone: '+1 (555) 765-4321',
     role: 'Interviewer',
     title: 'Engineering Director',
     avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150'
@@ -46,8 +49,6 @@ export const INITIAL_CANDIDATES = [
     experience: '5+ years',
     location: 'San Francisco, CA',
     appliedDate: '2026-09-01',
-    driveFileUrl: 'https://drive.google.com/file/d/1A2b3C4d5E6f7G8h9_david_miller_resume/view',
-    driveFileName: 'David_Miller_Resume_2026.pdf',
     notes: 'Demonstrated strong proficiency in React architecture, TypeScript, and microservice design during preliminary review.',
     interviewerId: 'usr_interviewer_1',
     rating: 4
@@ -62,8 +63,6 @@ export const INITIAL_CANDIDATES = [
     experience: '7+ years',
     location: 'New York, NY',
     appliedDate: '2026-08-28',
-    driveFileUrl: 'https://drive.google.com/file/d/1B2c3D4e5F6g7H8i9_emily_watson_dossier/view',
-    driveFileName: 'Emily_Watson_Portfolio_and_CV.pdf',
     notes: 'Exceptional background leading design system migrations and web performance initiatives.',
     interviewerId: 'usr_interviewer_2',
     rating: 5
@@ -78,8 +77,6 @@ export const INITIAL_CANDIDATES = [
     experience: '4 years',
     location: 'Austin, TX',
     appliedDate: '2026-09-08',
-    driveFileUrl: 'https://drive.google.com/file/d/1C3d4E5f6G7h8I9j0_marcus_johnson_cv/view',
-    driveFileName: 'Marcus_Johnson_Backend_CV.pdf',
     notes: 'Specializes in Go, distributed queuing systems, and PostgreSQL query tuning.',
     interviewerId: 'usr_interviewer_1',
     rating: 3
@@ -94,8 +91,6 @@ export const INITIAL_CANDIDATES = [
     experience: '6+ years',
     location: 'Seattle, WA',
     appliedDate: '2026-08-15',
-    driveFileUrl: 'https://drive.google.com/file/d/1D4e5F6g7H8i9J0k1_sophia_patel_portfolio/view',
-    driveFileName: 'Sophia_Patel_Design_Case_Studies.pdf',
     notes: 'Formal offer extended on September 12th following unanimous recommendation.',
     interviewerId: 'usr_interviewer_2',
     rating: 5
@@ -110,8 +105,6 @@ export const INITIAL_CANDIDATES = [
     experience: '8+ years',
     location: 'Remote',
     appliedDate: '2026-09-14',
-    driveFileUrl: 'https://drive.google.com/file/d/1E5f6G7h8I9j0K1l2_james_wilson_resume/view',
-    driveFileName: 'James_Wilson_DevOps_Resume.pdf',
     notes: 'Deep expertise in Kubernetes cluster management, Terraform infrastructure code, and multi-region AWS setup.',
     interviewerId: null,
     rating: null
@@ -126,8 +119,6 @@ export const INITIAL_CANDIDATES = [
     experience: '5 years',
     location: 'Chicago, IL',
     appliedDate: '2026-08-01',
-    driveFileUrl: 'https://drive.google.com/file/d/1F6g7H8i9J0k1L2m3_chloe_kim_hiring_docs/view',
-    driveFileName: 'Chloe_Kim_Signed_Offer.pdf',
     notes: 'Offer signed. Onboarding scheduled for October 1st.',
     interviewerId: 'usr_interviewer_1',
     rating: 5
@@ -142,8 +133,6 @@ export const INITIAL_CANDIDATES = [
     experience: '3 years',
     location: 'Denver, CO',
     appliedDate: '2026-08-20',
-    driveFileUrl: null,
-    driveFileName: null,
     notes: 'Application closed due to mismatch in required team leadership experience.',
     interviewerId: 'usr_interviewer_2',
     rating: 2

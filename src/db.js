@@ -21,11 +21,6 @@ export const initStorage = () => {
   if (!localStorage.getItem(STORAGE_KEYS.FEEDBACK)) {
     localStorage.setItem(STORAGE_KEYS.FEEDBACK, JSON.stringify(INITIAL_FEEDBACK));
   }
-  if (!localStorage.getItem(STORAGE_KEYS.SESSION)) {
-    const defaultUser = INITIAL_USERS[0]; // Sarah Jenkins
-    const token = btoa(JSON.stringify({ id: defaultUser.id, role: defaultUser.role, exp: Date.now() + 86400000 }));
-    localStorage.setItem(STORAGE_KEYS.SESSION, JSON.stringify({ user: defaultUser, token }));
-  }
 };
 
 export const authService = {
@@ -38,19 +33,41 @@ export const authService = {
     }
   },
 
-  login: (email, role) => {
+  loginWithIdentifier: (identifier, role) => {
     const users = JSON.parse(localStorage.getItem(STORAGE_KEYS.USERS) || '[]');
-    let user = users.find(u => u.email.toLowerCase() === email.toLowerCase());
+    const cleaned = identifier.trim().toLowerCase();
+    const isEmail = cleaned.includes('@');
     
+    // Find user by email or phone number
+    let user = users.find(u => {
+      if (isEmail) {
+        return u.email && u.email.toLowerCase() === cleaned;
+      } else {
+        const userPhoneClean = (u.phone || '').replace(/[\s\-\(\)\+]/g, '');
+        const inputPhoneClean = cleaned.replace(/[\s\-\(\)\+]/g, '');
+        return userPhoneClean && userPhoneClean.includes(inputPhoneClean);
+      }
+    });
+
     if (!user) {
+      // Create new user account with identifier
+      const generatedName = isEmail ? cleaned.split('@')[0] : `User_${cleaned.slice(-4)}`;
       user = {
         id: `usr_${Date.now()}`,
-        name: email.split('@')[0],
-        email,
+        name: generatedName.charAt(0).toUpperCase() + generatedName.slice(1),
+        email: isEmail ? cleaned : `${cleaned}@company.com`,
+        phone: isEmail ? '+1 (555) 000-0000' : identifier,
         role: role || 'Recruiter',
+        title: role === 'Recruiter' ? 'Talent Acquisition Specialist' : 'Technical Evaluator',
         avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150'
       };
       users.push(user);
+      localStorage.setItem(STORAGE_KEYS.USERS, JSON.stringify(users));
+    } else if (role && user.role !== role) {
+      // Update role if selected explicitly
+      user.role = role;
+      const index = users.findIndex(u => u.id === user.id);
+      if (index !== -1) users[index] = user;
       localStorage.setItem(STORAGE_KEYS.USERS, JSON.stringify(users));
     }
 
@@ -60,7 +77,20 @@ export const authService = {
     return session;
   },
 
-  signup: (name, email, role) => {
+  loginById: (userId) => {
+    const users = JSON.parse(localStorage.getItem(STORAGE_KEYS.USERS) || '[]');
+    const user = users.find(u => u.id === userId) || INITIAL_USERS[0];
+    const token = btoa(JSON.stringify({ id: user.id, role: user.role, exp: Date.now() + 86400000 }));
+    const session = { user, token };
+    localStorage.setItem(STORAGE_KEYS.SESSION, JSON.stringify(session));
+    return session;
+  },
+
+  login: (email, role) => {
+    return authService.loginWithIdentifier(email, role);
+  },
+
+  signup: (name, email, role, phone) => {
     const users = JSON.parse(localStorage.getItem(STORAGE_KEYS.USERS) || '[]');
     const existing = users.find(u => u.email.toLowerCase() === email.toLowerCase());
     if (existing) {
@@ -71,7 +101,9 @@ export const authService = {
       id: `usr_${Date.now()}`,
       name,
       email,
+      phone: phone || '+1 (555) 000-0000',
       role,
+      title: role === 'Recruiter' ? 'Recruiting Manager' : 'Technical Evaluator',
       avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150'
     };
     users.push(newUser);
@@ -88,13 +120,16 @@ export const authService = {
     if (!session) return null;
 
     const users = JSON.parse(localStorage.getItem(STORAGE_KEYS.USERS) || '[]');
-    const matchedUser = users.find(u => u.role === newRole) || {
-      ...session.user,
-      role: newRole
-    };
+    const updatedUser = { ...session.user, role: newRole };
+    
+    const userIndex = users.findIndex(u => u.id === session.user.id);
+    if (userIndex !== -1) {
+      users[userIndex].role = newRole;
+      localStorage.setItem(STORAGE_KEYS.USERS, JSON.stringify(users));
+    }
 
-    const token = btoa(JSON.stringify({ id: matchedUser.id, role: newRole, exp: Date.now() + 86400000 }));
-    const updatedSession = { user: matchedUser, token };
+    const token = btoa(JSON.stringify({ id: updatedUser.id, role: newRole, exp: Date.now() + 86400000 }));
+    const updatedSession = { user: updatedUser, token };
     localStorage.setItem(STORAGE_KEYS.SESSION, JSON.stringify(updatedSession));
     return updatedSession;
   },
@@ -123,8 +158,6 @@ export const candidateService = {
       rating: null,
       notes: '',
       interviewerId: null,
-      driveFileUrl: candidateData.driveFileUrl || null,
-      driveFileName: candidateData.driveFileName || null,
       ...candidateData
     };
     candidates.unshift(newCandidate);
@@ -144,13 +177,6 @@ export const candidateService = {
 
   updateStage: (id, newStage) => {
     return candidateService.update(id, { stage: newStage });
-  },
-
-  attachDriveFile: (id, fileUrl, fileName) => {
-    return candidateService.update(id, {
-      driveFileUrl: fileUrl,
-      driveFileName: fileName || 'Google_Drive_Document.pdf'
-    });
   },
 
   delete: (id) => {
@@ -257,24 +283,4 @@ export const userService = {
   getAll: () => {
     return JSON.parse(localStorage.getItem(STORAGE_KEYS.USERS) || '[]');
   }
-};
-
-// Google Drive Export / Backup helper
-export const exportDriveDossier = (candidate) => {
-  const dossierData = {
-    title: `Candidate Hiring Log - ${candidate.name}`,
-    candidate,
-    interviews: interviewService.getByCandidate(candidate.id),
-    feedback: feedbackService.getByCandidate(candidate.id),
-    exportedAt: new Date().toISOString()
-  };
-  
-  // Download as JSON file or simulate Drive sync
-  const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(dossierData, null, 2));
-  const downloadAnchor = document.createElement('a');
-  downloadAnchor.setAttribute("href", dataStr);
-  downloadAnchor.setAttribute("download", `Google_Drive_Dossier_${candidate.name.replace(/\s+/g, '_')}.json`);
-  document.body.appendChild(downloadAnchor);
-  downloadAnchor.click();
-  downloadAnchor.remove();
 };

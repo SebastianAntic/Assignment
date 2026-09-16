@@ -10,7 +10,7 @@ import {
   exportDriveDossier
 } from './db.js';
 
-// Clean SVG Icons (Zero Emoji, Production B2B SaaS Aesthetic)
+// SVG Icons
 const Icons = {
   Kanban: () => (
     <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75}>
@@ -90,6 +90,284 @@ const getStageBadgeStyle = (stage) => {
   }
 };
 
+// DEDICATED FULL-SCREEN LOGIN PAGE COMPONENT
+function LoginPage({ onLoginSuccess }) {
+  const [selectedRole, setSelectedRole] = useState('Recruiter');
+  const [authMethod, setAuthMethod] = useState('email'); // 'email' | 'phone'
+  const [identifier, setIdentifier] = useState('');
+  const [step, setStep] = useState(1); // 1: Identifier input, 2: OTP verification
+  const [otpCode, setOtpCode] = useState(['', '', '', '']);
+  const [errorMsg, setErrorMsg] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const defaultDemoUsers = [
+    {
+      id: 'usr_recruiter_1',
+      name: 'Sarah Jenkins',
+      role: 'Recruiter',
+      title: 'Lead Talent Acquisition',
+      email: 'sarah.jenkins@company.com',
+      phone: '+1 (555) 987-6543',
+      avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150'
+    },
+    {
+      id: 'usr_interviewer_1',
+      name: 'Alex Chen',
+      role: 'Interviewer',
+      title: 'Staff Frontend Engineer',
+      email: 'alex.chen@company.com',
+      phone: '+1 (555) 876-5432',
+      avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150'
+    },
+    {
+      id: 'usr_interviewer_2',
+      name: 'Maria Rodriguez',
+      role: 'Interviewer',
+      title: 'Engineering Director',
+      email: 'maria.rodriguez@company.com',
+      phone: '+1 (555) 765-4321',
+      avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150'
+    }
+  ];
+
+  const handleSendCode = (e) => {
+    e.preventDefault();
+    if (!identifier.trim()) {
+      setErrorMsg(authMethod === 'email' ? 'Please enter a valid email address.' : 'Please enter a valid phone number.');
+      return;
+    }
+    setErrorMsg('');
+    setIsSubmitting(true);
+    setTimeout(() => {
+      setIsSubmitting(false);
+      setStep(2);
+      setOtpCode(['1', '2', '3', '4']); // Pre-fill sample OTP hint
+    }, 400);
+  };
+
+  const handleVerifyOtp = (e) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+    setTimeout(() => {
+      try {
+        const session = authService.loginWithIdentifier(identifier, selectedRole);
+        setIsSubmitting(false);
+        onLoginSuccess(session);
+      } catch (err) {
+        setIsSubmitting(false);
+        setErrorMsg(err.message || 'Authentication failed.');
+      }
+    }, 300);
+  };
+
+  const handleQuickDemoLogin = (userId) => {
+    const session = authService.loginById(userId);
+    onLoginSuccess(session);
+  };
+
+  return (
+    <div className="min-h-screen w-full bg-slate-950 flex flex-col justify-between text-slate-100 font-sans relative overflow-hidden">
+      {/* Background Decorative Glows */}
+      <div className="absolute -top-40 -left-40 w-96 h-96 bg-blue-600/20 rounded-full blur-3xl pointer-events-none"></div>
+      <div className="absolute -bottom-40 -right-40 w-96 h-96 bg-indigo-600/20 rounded-full blur-3xl pointer-events-none"></div>
+
+      {/* Top Header */}
+      <header className="p-6 flex items-center justify-between border-b border-slate-800/60 z-10">
+        <div className="flex items-center gap-3">
+          <div className="w-9 h-9 rounded-lg bg-gradient-to-tr from-blue-600 to-indigo-500 text-white flex items-center justify-center font-bold text-sm tracking-wider shadow-lg shadow-blue-500/20">
+            HS
+          </div>
+          <div>
+            <h1 className="font-bold text-sm text-white tracking-tight">Hiring Suite</h1>
+            <p className="text-[11px] text-slate-400">Enterprise Candidate Pipeline</p>
+          </div>
+        </div>
+      </header>
+
+      {/* Main Login Card Area */}
+      <main className="flex-1 flex items-center justify-center p-6 z-10">
+        <div className="w-full max-w-md bg-slate-900/90 border border-slate-800 backdrop-blur-xl rounded-2xl p-8 shadow-2xl space-y-6">
+          
+          {/* Header & Title */}
+          <div className="text-center space-y-1">
+            <h2 className="text-xl font-bold text-white tracking-tight">Sign In to Enterprise Portal</h2>
+            <p className="text-xs text-slate-400">Select your account role and authenticate via email or phone</p>
+          </div>
+
+          {/* Role Selection Tabs */}
+          <div className="grid grid-cols-2 p-1 bg-slate-950/80 rounded-xl border border-slate-800/80 text-xs font-semibold">
+            <button
+              type="button"
+              onClick={() => { setSelectedRole('Recruiter'); setStep(1); }}
+              className={`py-2 rounded-lg transition-all flex items-center justify-center gap-2 ${
+                selectedRole === 'Recruiter'
+                  ? 'bg-blue-600 text-white shadow-md'
+                  : 'text-slate-400 hover:text-white'
+              }`}
+            >
+              <span>Recruiter</span>
+              <span className="text-[10px] opacity-75 font-normal">(Full Admin)</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => { setSelectedRole('Interviewer'); setStep(1); }}
+              className={`py-2 rounded-lg transition-all flex items-center justify-center gap-2 ${
+                selectedRole === 'Interviewer'
+                  ? 'bg-blue-600 text-white shadow-md'
+                  : 'text-slate-400 hover:text-white'
+              }`}
+            >
+              <span>Interviewer</span>
+              <span className="text-[10px] opacity-75 font-normal">(Evaluations)</span>
+            </button>
+          </div>
+
+          {/* STEP 1: Email or Phone Input */}
+          {step === 1 && (
+            <form onSubmit={handleSendCode} className="space-y-4">
+              
+              {/* Method Toggle: Email vs Phone */}
+              <div className="flex items-center justify-between text-xs pb-1 border-b border-slate-800">
+                <span className="text-slate-400 font-medium">Authentication Method:</span>
+                <div className="flex gap-3">
+                  <button
+                    type="button"
+                    onClick={() => { setAuthMethod('email'); setIdentifier(''); setErrorMsg(''); }}
+                    className={`font-semibold transition ${authMethod === 'email' ? 'text-blue-400 underline' : 'text-slate-500 hover:text-slate-300'}`}
+                  >
+                    Email Address
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => { setAuthMethod('phone'); setIdentifier(''); setErrorMsg(''); }}
+                    className={`font-semibold transition ${authMethod === 'phone' ? 'text-blue-400 underline' : 'text-slate-500 hover:text-slate-300'}`}
+                  >
+                    Phone Number
+                  </button>
+                </div>
+              </div>
+
+              {/* Input Field */}
+              <div>
+                <label className="block text-xs font-semibold text-slate-300 mb-1.5">
+                  {authMethod === 'email' ? 'Work Email Address' : 'Mobile Phone Number'}
+                </label>
+                <input
+                  type={authMethod === 'email' ? 'email' : 'tel'}
+                  required
+                  value={identifier}
+                  onChange={(e) => setIdentifier(e.target.value)}
+                  placeholder={authMethod === 'email' ? (selectedRole === 'Recruiter' ? 'sarah.jenkins@company.com' : 'alex.chen@company.com') : '+1 (555) 987-6543'}
+                  className="w-full px-3.5 py-2.5 rounded-lg border border-slate-800 bg-slate-950/80 text-white text-xs placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition"
+                />
+              </div>
+
+              {errorMsg && (
+                <p className="text-xs text-rose-400 font-medium bg-rose-950/40 border border-rose-900/60 p-2 rounded-lg text-center">
+                  {errorMsg}
+                </p>
+              )}
+
+              <button
+                type="submit"
+                disabled={isSubmitting}
+                className="w-full py-2.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white font-semibold text-xs transition-all shadow-lg shadow-blue-600/25 flex items-center justify-center gap-2"
+              >
+                {isSubmitting ? 'Sending Security Code...' : `Continue with ${authMethod === 'email' ? 'Email' : 'Phone'} →`}
+              </button>
+            </form>
+          )}
+
+          {/* STEP 2: Verification PIN / OTP */}
+          {step === 2 && (
+            <form onSubmit={handleVerifyOtp} className="space-y-4 animate-fade-in">
+              <div className="text-center space-y-1">
+                <p className="text-xs text-slate-300">
+                  Enter 4-digit code sent to <span className="font-semibold text-white">{identifier}</span>
+                </p>
+                <p className="text-[11px] text-blue-400 font-mono">(Code: 1234)</p>
+              </div>
+
+              <div className="flex justify-center gap-3 py-2">
+                {otpCode.map((digit, idx) => (
+                  <input
+                    key={idx}
+                    type="text"
+                    maxLength={1}
+                    value={digit}
+                    onChange={(e) => {
+                      const newOtp = [...otpCode];
+                      newOtp[idx] = e.target.value;
+                      setOtpCode(newOtp);
+                    }}
+                    className="w-12 h-12 text-center text-lg font-bold rounded-lg border border-slate-700 bg-slate-950 text-white focus:outline-none focus:border-blue-500"
+                  />
+                ))}
+              </div>
+
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={() => setStep(1)}
+                  className="w-1/3 py-2.5 rounded-lg border border-slate-800 text-slate-400 text-xs font-medium hover:bg-slate-800/60 transition"
+                >
+                  ← Back
+                </button>
+                <button
+                  type="submit"
+                  disabled={isSubmitting}
+                  className="w-2/3 py-2.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-xs transition shadow-lg shadow-emerald-600/20"
+                >
+                  {isSubmitting ? 'Verifying...' : `Sign In as ${selectedRole}`}
+                </button>
+              </div>
+            </form>
+          )}
+
+          {/* Quick Demo Accounts */}
+          <div className="relative pt-2">
+            <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-slate-800"></div></div>
+            <div className="relative flex justify-center text-[10px] uppercase tracking-wider font-semibold">
+              <span className="bg-slate-900 px-2 text-slate-500">Or Sign In as Demo Account</span>
+            </div>
+          </div>
+
+          {/* Demo Profiles List */}
+          <div className="space-y-2">
+            {defaultDemoUsers.map((user) => (
+              <button
+                key={user.id}
+                type="button"
+                onClick={() => handleQuickDemoLogin(user.id)}
+                className="w-full flex items-center justify-between p-2.5 rounded-xl border border-slate-800/80 bg-slate-950/40 hover:bg-slate-800/60 hover:border-slate-700 transition group text-left"
+              >
+                <div className="flex items-center gap-2.5">
+                  <img src={user.avatar} alt={user.name} className="w-8 h-8 rounded-full object-cover border border-slate-700" />
+                  <div>
+                    <h4 className="text-xs font-semibold text-white group-hover:text-blue-400 transition-colors">{user.name}</h4>
+                    <p className="text-[10px] text-slate-400">{user.title}</p>
+                  </div>
+                </div>
+                <span className={`text-[10px] px-2 py-0.5 rounded font-semibold ${
+                  user.role === 'Recruiter' ? 'bg-blue-950/80 text-blue-300 border border-blue-800/60' : 'bg-amber-950/80 text-amber-300 border border-amber-800/60'
+                }`}>
+                  {user.role}
+                </span>
+              </button>
+            ))}
+          </div>
+
+        </div>
+      </main>
+
+      {/* Footer */}
+      <footer className="p-4 text-center text-[11px] text-slate-500 border-t border-slate-800/40">
+        Hiring Suite &copy; 2026
+      </footer>
+    </div>
+  );
+}
+
 export default function App() {
   const [session, setSession] = useState(null);
   const [candidates, setCandidates] = useState([]);
@@ -129,6 +407,12 @@ export default function App() {
     setInterviews(interviewService.getAll());
     setFeedback(feedbackService.getAll());
     setUsers(userService.getAll());
+  };
+
+  const handleLogout = () => {
+    authService.logout();
+    setSession(null);
+    setSelectedCandidate(null);
   };
 
   const isRecruiter = session?.user?.role === 'Recruiter';
@@ -179,7 +463,6 @@ export default function App() {
       return;
     }
     
-    // Automatically name drive file if URL provided
     const driveFileName = candidateForm.driveFileUrl ? `${candidateForm.name.replace(/\s+/g, '_')}_Resume_Drive.pdf` : null;
 
     candidateService.add({
@@ -256,6 +539,11 @@ export default function App() {
     }
   };
 
+  // IF NOT AUTHENTICATED, RENDER FULL-SCREEN LOGIN PAGE
+  if (!session) {
+    return <LoginPage onLoginSuccess={(newSession) => { setSession(newSession); refreshAllData(); }} />;
+  }
+
   return (
     <div className="flex h-screen overflow-hidden bg-slate-50 dark:bg-slate-950 font-sans text-slate-800 dark:text-slate-100">
       
@@ -264,6 +552,9 @@ export default function App() {
         <div>
           {/* Header & Logo */}
           <div className="h-16 flex items-center px-6 border-b border-slate-200 dark:border-slate-800 gap-3">
+            <div className="w-8 h-8 rounded-lg bg-gradient-to-tr from-blue-600 to-indigo-500 text-white flex items-center justify-center font-bold text-xs tracking-wider shadow-md">
+              HS
+            </div>
             <div>
               <h1 className="font-semibold text-sm text-slate-900 dark:text-white tracking-tight">Hiring Suite</h1>
               <p className="text-[11px] text-slate-400">Enterprise Talent Pipeline</p>
@@ -348,10 +639,10 @@ export default function App() {
             </button>
 
             <button
-              onClick={() => setShowAuthModal(true)}
-              className="w-full text-center text-[11px] text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 py-1"
+              onClick={handleLogout}
+              className="w-full text-center text-xs font-semibold py-1.5 px-3 rounded-md bg-rose-50 text-rose-700 dark:bg-rose-950/40 dark:text-rose-300 border border-rose-200 dark:border-rose-900/60 hover:bg-rose-100 dark:hover:bg-rose-900/60 transition"
             >
-              Account Credentials & Sign Out
+              Sign Out / Switch Account
             </button>
           </div>
         </div>

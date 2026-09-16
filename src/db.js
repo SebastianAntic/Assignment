@@ -58,8 +58,7 @@ export const authService = {
         email: isEmail ? cleaned : `${cleaned}@company.com`,
         phone: isEmail ? '+1 (555) 000-0000' : identifier,
         role: role || 'Recruiter',
-        title: role === 'Recruiter' ? 'Talent Acquisition Specialist' : 'Technical Evaluator',
-        avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150'
+        title: role === 'Recruiter' ? 'Talent Acquisition Specialist' : 'Technical Evaluator'
       };
       users.push(user);
       localStorage.setItem(STORAGE_KEYS.USERS, JSON.stringify(users));
@@ -103,8 +102,7 @@ export const authService = {
       email,
       phone: phone || '+1 (555) 000-0000',
       role,
-      title: role === 'Recruiter' ? 'Recruiting Manager' : 'Technical Evaluator',
-      avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150'
+      title: role === 'Recruiter' ? 'Recruiting Manager' : 'Technical Evaluator'
     };
     users.push(newUser);
     localStorage.setItem(STORAGE_KEYS.USERS, JSON.stringify(users));

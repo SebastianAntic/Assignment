@@ -15,8 +15,7 @@ export const INITIAL_USERS = [
     email: 'sarah.jenkins@company.com',
     phone: '+1 (555) 987-6543',
     role: 'Recruiter',
-    title: 'Lead Talent Acquisition Partner',
-    avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150'
+    title: 'Lead Talent Acquisition Partner'
   },
   {
     id: 'usr_interviewer_1',
@@ -24,8 +23,7 @@ export const INITIAL_USERS = [
     email: 'alex.chen@company.com',
     phone: '+1 (555) 876-5432',
     role: 'Interviewer',
-    title: 'Staff Frontend Engineer',
-    avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150'
+    title: 'Staff Frontend Engineer'
   },
   {
     id: 'usr_interviewer_2',
@@ -33,8 +31,7 @@ export const INITIAL_USERS = [
     email: 'maria.rodriguez@company.com',
     phone: '+1 (555) 765-4321',
     role: 'Interviewer',
-    title: 'Engineering Director',
-    avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150'
+    title: 'Engineering Director'
   }
 ];
 

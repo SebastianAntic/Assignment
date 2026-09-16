@@ -6,8 +6,7 @@ import {
   candidateService,
   interviewService,
   feedbackService,
-  userService,
-  exportDriveDossier
+  userService
 } from './db.js';
 
 // SVG Icons
@@ -52,22 +51,9 @@ const Icons = {
       <path strokeLinecap="round" strokeLinejoin="round" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
     </svg>
   ),
-  GoogleDrive: () => (
-    <svg className="w-4 h-4" viewBox="0 0 87.3 78" fill="none">
-      <path d="M6.6 66.85l3.85 6.65c.8 1.4 1.95 2.5 3.3 3.3l13.75-23.8H0c0 1.55.4 3.1 1.2 4.5l5.4 9.35z" fill="#0066DA"/>
-      <path d="M43.65 25L29.9 1.2C28.5.4 26.95 0 25.35 0c-1.55 0-3.1.4-4.5 1.2L7.1 24.95l13.75 23.8H57.4L43.65 25z" fill="#00AC47"/>
-      <path d="M73.55 66.85l-13.75-23.8H32.3l13.75 23.8h27.5c1.55 0 3.1-.4 4.5-1.2 1.35-.8 2.5-1.9 3.3-3.3l-7.8-14.25-6.8 12.05z" fill="#EA4335"/>
-      <path d="M43.65 25L57.4 48.75h29.9c.8-1.4 1.2-2.95 1.2-4.5 0-1.6-.4-3.15-1.2-4.55L73.55 12.2c-.8-1.4-1.95-2.5-3.3-3.3L56.5 32.7 43.65 25z" fill="#FFBA00"/>
-    </svg>
-  ),
   ExternalLink: () => (
     <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75}>
       <path strokeLinecap="round" strokeLinejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-    </svg>
-  ),
-  Download: () => (
-    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75}>
-      <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
     </svg>
   )
 };
@@ -90,8 +76,55 @@ const getStageBadgeStyle = (stage) => {
   }
 };
 
+// INITIALS AVATAR BADGE COMPONENT (No external image dependencies)
+const getInitials = (name) => {
+  if (!name) return 'U';
+  const parts = name.trim().split(' ');
+  if (parts.length === 1) return parts[0].substring(0, 2).toUpperCase();
+  return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+};
+
+const UserAvatar = ({ name, className = "w-8 h-8 text-xs font-bold" }) => {
+  const initials = getInitials(name);
+  return (
+    <div className={`${className} rounded-full bg-gradient-to-tr from-blue-600 to-indigo-600 dark:from-blue-500 dark:to-indigo-500 text-white flex items-center justify-center border border-blue-400/30 dark:border-slate-700 shadow-sm flex-shrink-0 select-none font-semibold tracking-wider`}>
+      {initials}
+    </div>
+  );
+};
+
+// THEME TOGGLE CONTROL COMPONENT (Light / Dark Mode Switch)
+const ThemeToggle = ({ isDarkMode, onToggle, className = "" }) => (
+  <button
+    type="button"
+    onClick={onToggle}
+    className={`p-2 rounded-lg border text-xs font-semibold flex items-center gap-1.5 transition-all ${
+      isDarkMode
+        ? 'bg-slate-800 border-slate-700 text-amber-300 hover:bg-slate-700'
+        : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-100 shadow-sm'
+    } ${className}`}
+    title={isDarkMode ? "Switch to Light Theme" : "Switch to Dark Theme"}
+  >
+    {isDarkMode ? (
+      <>
+        <svg className="w-4 h-4 text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+        </svg>
+        <span className="hidden sm:inline">Light Theme</span>
+      </>
+    ) : (
+      <>
+        <svg className="w-4 h-4 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+        </svg>
+        <span className="hidden sm:inline">Dark Theme</span>
+      </>
+    )}
+  </button>
+);
+
 // DEDICATED FULL-SCREEN LOGIN PAGE COMPONENT
-function LoginPage({ onLoginSuccess }) {
+function LoginPage({ onLoginSuccess, isDarkMode, onToggleTheme }) {
   const [selectedRole, setSelectedRole] = useState('Recruiter');
   const [authMethod, setAuthMethod] = useState('email'); // 'email' | 'phone'
   const [identifier, setIdentifier] = useState('');
@@ -105,10 +138,9 @@ function LoginPage({ onLoginSuccess }) {
       id: 'usr_recruiter_1',
       name: 'Sarah Jenkins',
       role: 'Recruiter',
-      title: 'Lead Talent Acquisition',
+      title: 'Lead Talent Acquisition Partner',
       email: 'sarah.jenkins@company.com',
-      phone: '+1 (555) 987-6543',
-      avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150'
+      phone: '+1 (555) 987-6543'
     },
     {
       id: 'usr_interviewer_1',
@@ -116,8 +148,7 @@ function LoginPage({ onLoginSuccess }) {
       role: 'Interviewer',
       title: 'Staff Frontend Engineer',
       email: 'alex.chen@company.com',
-      phone: '+1 (555) 876-5432',
-      avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150'
+      phone: '+1 (555) 876-5432'
     },
     {
       id: 'usr_interviewer_2',
@@ -125,8 +156,7 @@ function LoginPage({ onLoginSuccess }) {
       role: 'Interviewer',
       title: 'Engineering Director',
       email: 'maria.rodriguez@company.com',
-      phone: '+1 (555) 765-4321',
-      avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150'
+      phone: '+1 (555) 765-4321'
     }
   ];
 
@@ -166,43 +196,46 @@ function LoginPage({ onLoginSuccess }) {
   };
 
   return (
-    <div className="min-h-screen w-full bg-slate-950 flex flex-col justify-between text-slate-100 font-sans relative overflow-hidden">
+    <div className="min-h-screen w-full bg-slate-50 dark:bg-slate-950 flex flex-col justify-between text-slate-800 dark:text-slate-100 font-sans relative overflow-hidden transition-colors duration-200">
       {/* Background Decorative Glows */}
-      <div className="absolute -top-40 -left-40 w-96 h-96 bg-blue-600/20 rounded-full blur-3xl pointer-events-none"></div>
-      <div className="absolute -bottom-40 -right-40 w-96 h-96 bg-indigo-600/20 rounded-full blur-3xl pointer-events-none"></div>
+      <div className="absolute -top-40 -left-40 w-96 h-96 bg-blue-500/10 dark:bg-blue-600/20 rounded-full blur-3xl pointer-events-none"></div>
+      <div className="absolute -bottom-40 -right-40 w-96 h-96 bg-indigo-500/10 dark:bg-indigo-600/20 rounded-full blur-3xl pointer-events-none"></div>
 
       {/* Top Header */}
-      <header className="p-6 flex items-center justify-between border-b border-slate-800/60 z-10">
+      <header className="p-6 flex items-center justify-between border-b border-slate-200 dark:border-slate-800/60 z-10 bg-white/60 dark:bg-slate-900/60 backdrop-blur-md">
         <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-lg bg-gradient-to-tr from-blue-600 to-indigo-500 text-white flex items-center justify-center font-bold text-sm tracking-wider shadow-lg shadow-blue-500/20">
+          <div className="w-8 h-8 rounded-lg bg-gradient-to-tr from-blue-600 to-indigo-500 text-white flex items-center justify-center font-bold text-xs shadow-md">
             HS
           </div>
           <div>
-            <h1 className="font-bold text-sm text-white tracking-tight">Hiring Suite</h1>
-            <p className="text-[11px] text-slate-400">Enterprise Candidate Pipeline</p>
+            <h1 className="font-bold text-sm text-slate-900 dark:text-white tracking-tight">Hiring Suite</h1>
+            <p className="text-[11px] text-slate-500 dark:text-slate-400">Enterprise Candidate Pipeline</p>
           </div>
         </div>
+
+        {/* Theme Toggle Button in Login Page Header */}
+        <ThemeToggle isDarkMode={isDarkMode} onToggle={onToggleTheme} />
       </header>
 
       {/* Main Login Card Area */}
       <main className="flex-1 flex items-center justify-center p-6 z-10">
-        <div className="w-full max-w-md bg-slate-900/90 border border-slate-800 backdrop-blur-xl rounded-2xl p-8 shadow-2xl space-y-6">
+        <div className="w-full max-w-md bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 backdrop-blur-xl rounded-2xl p-8 shadow-2xl space-y-6">
           
           {/* Header & Title */}
           <div className="text-center space-y-1">
-            <h2 className="text-xl font-bold text-white tracking-tight">Sign In to Enterprise Portal</h2>
-            <p className="text-xs text-slate-400">Select your account role and authenticate via email or phone</p>
+            <h2 className="text-xl font-bold text-slate-900 dark:text-white tracking-tight">Sign In to Enterprise Portal</h2>
+            <p className="text-xs text-slate-500 dark:text-slate-400">Select your account role and authenticate via email or phone</p>
           </div>
 
           {/* Role Selection Tabs */}
-          <div className="grid grid-cols-2 p-1 bg-slate-950/80 rounded-xl border border-slate-800/80 text-xs font-semibold">
+          <div className="grid grid-cols-2 p-1 bg-slate-100 dark:bg-slate-950/80 rounded-xl border border-slate-200 dark:border-slate-800/80 text-xs font-semibold">
             <button
               type="button"
               onClick={() => { setSelectedRole('Recruiter'); setStep(1); }}
               className={`py-2 rounded-lg transition-all flex items-center justify-center gap-2 ${
                 selectedRole === 'Recruiter'
                   ? 'bg-blue-600 text-white shadow-md'
-                  : 'text-slate-400 hover:text-white'
+                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
               }`}
             >
               <span>Recruiter</span>
@@ -214,7 +247,7 @@ function LoginPage({ onLoginSuccess }) {
               className={`py-2 rounded-lg transition-all flex items-center justify-center gap-2 ${
                 selectedRole === 'Interviewer'
                   ? 'bg-blue-600 text-white shadow-md'
-                  : 'text-slate-400 hover:text-white'
+                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
               }`}
             >
               <span>Interviewer</span>
@@ -227,20 +260,20 @@ function LoginPage({ onLoginSuccess }) {
             <form onSubmit={handleSendCode} className="space-y-4">
               
               {/* Method Toggle: Email vs Phone */}
-              <div className="flex items-center justify-between text-xs pb-1 border-b border-slate-800">
-                <span className="text-slate-400 font-medium">Authentication Method:</span>
+              <div className="flex items-center justify-between text-xs pb-1 border-b border-slate-200 dark:border-slate-800">
+                <span className="text-slate-500 dark:text-slate-400 font-medium">Authentication Method:</span>
                 <div className="flex gap-3">
                   <button
                     type="button"
                     onClick={() => { setAuthMethod('email'); setIdentifier(''); setErrorMsg(''); }}
-                    className={`font-semibold transition ${authMethod === 'email' ? 'text-blue-400 underline' : 'text-slate-500 hover:text-slate-300'}`}
+                    className={`font-semibold transition ${authMethod === 'email' ? 'text-blue-600 dark:text-blue-400 underline' : 'text-slate-500 hover:text-slate-800 dark:hover:text-slate-300'}`}
                   >
                     Email Address
                   </button>
                   <button
                     type="button"
                     onClick={() => { setAuthMethod('phone'); setIdentifier(''); setErrorMsg(''); }}
-                    className={`font-semibold transition ${authMethod === 'phone' ? 'text-blue-400 underline' : 'text-slate-500 hover:text-slate-300'}`}
+                    className={`font-semibold transition ${authMethod === 'phone' ? 'text-blue-600 dark:text-blue-400 underline' : 'text-slate-500 hover:text-slate-800 dark:hover:text-slate-300'}`}
                   >
                     Phone Number
                   </button>
@@ -249,7 +282,7 @@ function LoginPage({ onLoginSuccess }) {
 
               {/* Input Field */}
               <div>
-                <label className="block text-xs font-semibold text-slate-300 mb-1.5">
+                <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
                   {authMethod === 'email' ? 'Work Email Address' : 'Mobile Phone Number'}
                 </label>
                 <input
@@ -258,12 +291,12 @@ function LoginPage({ onLoginSuccess }) {
                   value={identifier}
                   onChange={(e) => setIdentifier(e.target.value)}
                   placeholder={authMethod === 'email' ? (selectedRole === 'Recruiter' ? 'sarah.jenkins@company.com' : 'alex.chen@company.com') : '+1 (555) 987-6543'}
-                  className="w-full px-3.5 py-2.5 rounded-lg border border-slate-800 bg-slate-950/80 text-white text-xs placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition"
+                  className="w-full px-3.5 py-2.5 rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/80 text-slate-900 dark:text-white text-xs placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition"
                 />
               </div>
 
               {errorMsg && (
-                <p className="text-xs text-rose-400 font-medium bg-rose-950/40 border border-rose-900/60 p-2 rounded-lg text-center">
+                <p className="text-xs text-rose-600 dark:text-rose-400 font-medium bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900/60 p-2 rounded-lg text-center">
                   {errorMsg}
                 </p>
               )}
@@ -282,10 +315,10 @@ function LoginPage({ onLoginSuccess }) {
           {step === 2 && (
             <form onSubmit={handleVerifyOtp} className="space-y-4 animate-fade-in">
               <div className="text-center space-y-1">
-                <p className="text-xs text-slate-300">
-                  Enter 4-digit code sent to <span className="font-semibold text-white">{identifier}</span>
+                <p className="text-xs text-slate-600 dark:text-slate-300">
+                  Enter 4-digit code sent to <span className="font-semibold text-slate-900 dark:text-white">{identifier}</span>
                 </p>
-                <p className="text-[11px] text-blue-400 font-mono">(Code: 1234)</p>
+                <p className="text-[11px] text-blue-600 dark:text-blue-400 font-mono">(Code: 1234)</p>
               </div>
 
               <div className="flex justify-center gap-3 py-2">
@@ -300,7 +333,7 @@ function LoginPage({ onLoginSuccess }) {
                       newOtp[idx] = e.target.value;
                       setOtpCode(newOtp);
                     }}
-                    className="w-12 h-12 text-center text-lg font-bold rounded-lg border border-slate-700 bg-slate-950 text-white focus:outline-none focus:border-blue-500"
+                    className="w-12 h-12 text-center text-lg font-bold rounded-lg border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-white focus:outline-none focus:border-blue-500"
                   />
                 ))}
               </div>
@@ -309,7 +342,7 @@ function LoginPage({ onLoginSuccess }) {
                 <button
                   type="button"
                   onClick={() => setStep(1)}
-                  className="w-1/3 py-2.5 rounded-lg border border-slate-800 text-slate-400 text-xs font-medium hover:bg-slate-800/60 transition"
+                  className="w-1/3 py-2.5 rounded-lg border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 text-xs font-medium hover:bg-slate-100 dark:hover:bg-slate-800/60 transition"
                 >
                   ← Back
                 </button>
@@ -326,9 +359,9 @@ function LoginPage({ onLoginSuccess }) {
 
           {/* Quick Demo Accounts */}
           <div className="relative pt-2">
-            <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-slate-800"></div></div>
+            <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-slate-200 dark:border-slate-800"></div></div>
             <div className="relative flex justify-center text-[10px] uppercase tracking-wider font-semibold">
-              <span className="bg-slate-900 px-2 text-slate-500">Or Sign In as Demo Account</span>
+              <span className="bg-white dark:bg-slate-900 px-2 text-slate-400 dark:text-slate-500">Or Sign In as Demo Account</span>
             </div>
           </div>
 
@@ -339,17 +372,17 @@ function LoginPage({ onLoginSuccess }) {
                 key={user.id}
                 type="button"
                 onClick={() => handleQuickDemoLogin(user.id)}
-                className="w-full flex items-center justify-between p-2.5 rounded-xl border border-slate-800/80 bg-slate-950/40 hover:bg-slate-800/60 hover:border-slate-700 transition group text-left"
+                className="w-full flex items-center justify-between p-2.5 rounded-xl border border-slate-200 dark:border-slate-800/80 bg-slate-50 dark:bg-slate-950/40 hover:bg-slate-100 dark:hover:bg-slate-800/60 hover:border-slate-300 dark:hover:border-slate-700 transition group text-left"
               >
                 <div className="flex items-center gap-2.5">
-                  <img src={user.avatar} alt={user.name} className="w-8 h-8 rounded-full object-cover border border-slate-700" />
+                  <UserAvatar name={user.name} className="w-8 h-8 text-xs font-bold" />
                   <div>
-                    <h4 className="text-xs font-semibold text-white group-hover:text-blue-400 transition-colors">{user.name}</h4>
-                    <p className="text-[10px] text-slate-400">{user.title}</p>
+                    <h4 className="text-xs font-semibold text-slate-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">{user.name}</h4>
+                    <p className="text-[10px] text-slate-500 dark:text-slate-400">{user.title}</p>
                   </div>
                 </div>
                 <span className={`text-[10px] px-2 py-0.5 rounded font-semibold ${
-                  user.role === 'Recruiter' ? 'bg-blue-950/80 text-blue-300 border border-blue-800/60' : 'bg-amber-950/80 text-amber-300 border border-amber-800/60'
+                  user.role === 'Recruiter' ? 'bg-blue-100 dark:bg-blue-950/80 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800/60' : 'bg-amber-100 dark:bg-amber-950/80 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800/60'
                 }`}>
                   {user.role}
                 </span>
@@ -361,7 +394,7 @@ function LoginPage({ onLoginSuccess }) {
       </main>
 
       {/* Footer */}
-      <footer className="p-4 text-center text-[11px] text-slate-500 border-t border-slate-800/40">
+      <footer className="p-4 text-center text-[11px] text-slate-500 border-t border-slate-200 dark:border-slate-800/40 bg-white/40 dark:bg-slate-900/40 backdrop-blur-md">
         Hiring Suite &copy; 2026
       </footer>
     </div>
@@ -375,6 +408,11 @@ export default function App() {
   const [feedback, setFeedback] = useState([]);
   const [users, setUsers] = useState([]);
 
+  const [isDarkMode, setIsDarkMode] = useState(() => {
+    const saved = localStorage.getItem('theme');
+    return saved ? saved === 'dark' : true;
+  });
+
   const [activeTab, setActiveTab] = useState('pipeline');
   const [searchQuery, setSearchQuery] = useState('');
   const [stageFilter, setStageFilter] = useState('All');
@@ -383,21 +421,28 @@ export default function App() {
   const [showAddCandidateModal, setShowAddCandidateModal] = useState(false);
   const [showScheduleModal, setShowScheduleModal] = useState(false);
   const [showFeedbackModal, setShowFeedbackModal] = useState(false);
-  const [showDriveModal, setShowDriveModal] = useState(false);
   const [showAuthModal, setShowAuthModal] = useState(false);
 
   const [feedbackCandidateTarget, setFeedbackCandidateTarget] = useState(null);
-  const [driveCandidateTarget, setDriveCandidateTarget] = useState(null);
 
   // Form Inputs
-  const [candidateForm, setCandidateForm] = useState({ name: '', email: '', phone: '', role: '', location: '', experience: '', notes: '', driveFileUrl: '' });
+  const [candidateForm, setCandidateForm] = useState({ name: '', email: '', phone: '', role: '', location: '', experience: '', notes: '' });
   const [scheduleForm, setScheduleForm] = useState({ candidateId: '', interviewerId: '', scheduledAt: '', type: 'Technical Interview', meetingLink: '' });
   const [feedbackForm, setFeedbackForm] = useState({ rating: 5, recommendation: 'Hire', comments: '' });
-  const [driveForm, setDriveForm] = useState({ fileUrl: '', fileName: '' });
   const [authForm, setAuthForm] = useState({ name: '', email: '', role: 'Recruiter', isSignup: false });
 
   useEffect(() => {
+    if (isDarkMode) {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+    localStorage.setItem('theme', isDarkMode ? 'dark' : 'light');
+  }, [isDarkMode]);
+
+  useEffect(() => {
     initStorage();
+    authService.logout();
     refreshAllData();
   }, []);
 
@@ -463,14 +508,9 @@ export default function App() {
       return;
     }
     
-    const driveFileName = candidateForm.driveFileUrl ? `${candidateForm.name.replace(/\s+/g, '_')}_Resume_Drive.pdf` : null;
-
-    candidateService.add({
-      ...candidateForm,
-      driveFileName
-    });
+    candidateService.add(candidateForm);
     
-    setCandidateForm({ name: '', email: '', phone: '', role: '', location: '', experience: '', notes: '', driveFileUrl: '' });
+    setCandidateForm({ name: '', email: '', phone: '', role: '', location: '', experience: '', notes: '' });
     setShowAddCandidateModal(false);
     refreshAllData();
   };
@@ -508,22 +548,6 @@ export default function App() {
     }
   };
 
-  const handleDriveAttachSubmit = (e) => {
-    e.preventDefault();
-    if (!driveCandidateTarget || !driveForm.fileUrl) return;
-
-    const fileName = driveForm.fileName || `${driveCandidateTarget.name.replace(/\s+/g, '_')}_Document.pdf`;
-    candidateService.attachDriveFile(driveCandidateTarget.id, driveForm.fileUrl, fileName);
-
-    setDriveForm({ fileUrl: '', fileName: '' });
-    setShowDriveModal(false);
-    refreshAllData();
-
-    if (selectedCandidate && selectedCandidate.id === driveCandidateTarget.id) {
-      setSelectedCandidate(candidateService.getById(driveCandidateTarget.id));
-    }
-  };
-
   const handleAuthSubmit = (e) => {
     e.preventDefault();
     try {
@@ -541,11 +565,17 @@ export default function App() {
 
   // IF NOT AUTHENTICATED, RENDER FULL-SCREEN LOGIN PAGE
   if (!session) {
-    return <LoginPage onLoginSuccess={(newSession) => { setSession(newSession); refreshAllData(); }} />;
+    return (
+      <LoginPage
+        onLoginSuccess={(newSession) => { setSession(newSession); refreshAllData(); }}
+        isDarkMode={isDarkMode}
+        onToggleTheme={() => setIsDarkMode(!isDarkMode)}
+      />
+    );
   }
 
   return (
-    <div className="flex h-screen overflow-hidden bg-slate-50 dark:bg-slate-950 font-sans text-slate-800 dark:text-slate-100">
+    <div className="flex h-screen overflow-hidden bg-slate-50 dark:bg-slate-950 font-sans text-slate-800 dark:text-slate-100 transition-colors duration-200">
       
       {/* SIDEBAR NAVIGATION */}
       <aside className="w-64 bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 flex flex-col justify-between flex-shrink-0 z-20">
@@ -614,11 +644,7 @@ export default function App() {
         {/* User Account & Role Switcher */}
         <div className="p-4 border-t border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50">
           <div className="flex items-center gap-3 mb-3">
-            <img
-              src={session?.user?.avatar || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150'}
-              alt="Avatar"
-              className="w-8 h-8 rounded-full object-cover border border-slate-200 dark:border-slate-700"
-            />
+            <UserAvatar name={session?.user?.name || 'User Account'} className="w-8 h-8 text-xs font-bold" />
             <div className="overflow-hidden">
               <p className="text-xs font-semibold text-slate-900 dark:text-white truncate">
                 {session?.user?.name || 'User Account'}
@@ -669,12 +695,13 @@ export default function App() {
           </div>
 
           <div className="flex items-center gap-3">
+            <ThemeToggle isDarkMode={isDarkMode} onToggle={() => setIsDarkMode(!isDarkMode)} />
             
             {isRecruiter && (
               <>
                 <button
                   onClick={() => setShowAddCandidateModal(true)}
-                  className="flex items-center gap-1.5 bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-900 text-xs font-semibold px-3.5 py-1.5 rounded-md hover:bg-slate-800 dark:hover:bg-white transition"
+                  className="flex items-center gap-1.5 bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-900 text-xs font-semibold px-3.5 py-1.5 rounded-md hover:bg-slate-800 dark:hover:bg-white transition shadow-sm"
                 >
                   <Icons.Plus />
                   New Candidate
@@ -682,7 +709,7 @@ export default function App() {
 
                 <button
                   onClick={() => setShowScheduleModal(true)}
-                  className="flex items-center gap-1.5 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 text-xs font-semibold px-3.5 py-1.5 rounded-md hover:bg-slate-50 dark:hover:bg-slate-700 transition"
+                  className="flex items-center gap-1.5 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 text-xs font-semibold px-3.5 py-1.5 rounded-md hover:bg-slate-50 dark:hover:bg-slate-700 transition shadow-sm"
                 >
                   <Icons.Calendar />
                   Schedule Interview
@@ -768,21 +795,6 @@ export default function App() {
 
                               <p className="text-[11px] text-slate-500 dark:text-slate-400 mb-2 truncate">{candidate.role}</p>
 
-                              {/* Google Drive Document Badge */}
-                              {candidate.driveFileUrl && (
-                                <a
-                                  href={candidate.driveFileUrl}
-                                  target="_blank"
-                                  rel="noreferrer"
-                                  onClick={e => e.stopPropagation()}
-                                  className="inline-flex items-center gap-1.5 text-[10px] text-slate-600 dark:text-slate-400 bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 border border-slate-200 dark:border-slate-700 px-2 py-0.5 rounded mb-2 transition"
-                                >
-                                  <Icons.GoogleDrive />
-                                  <span className="truncate max-w-[170px]">{candidate.driveFileName || 'Google Drive Resume'}</span>
-                                  <Icons.ExternalLink />
-                                </a>
-                              )}
-
                               <div className="flex items-center justify-between text-[11px] text-slate-400 pt-2 border-t border-slate-100 dark:border-slate-800/80">
                                 <span>{candidate.experience} exp</span>
                                 
@@ -833,7 +845,6 @@ export default function App() {
                       <th className="p-3">Candidate</th>
                       <th className="p-3">Position</th>
                       <th className="p-3">Stage</th>
-                      <th className="p-3">Google Drive File</th>
                       <th className="p-3">Applied</th>
                       <th className="p-3">Rating</th>
                       <th className="p-3 text-right">Actions</th>
@@ -851,29 +862,6 @@ export default function App() {
                           <span className={`text-[10px] font-medium px-2 py-0.5 rounded border ${getStageBadgeStyle(candidate.stage)}`}>
                             {candidate.stage}
                           </span>
-                        </td>
-                        <td className="p-3">
-                          {candidate.driveFileUrl ? (
-                            <a
-                              href={candidate.driveFileUrl}
-                              target="_blank"
-                              rel="noreferrer"
-                              className="inline-flex items-center gap-1.5 text-[11px] text-blue-600 dark:text-blue-400 hover:underline"
-                            >
-                              <Icons.GoogleDrive />
-                              {candidate.driveFileName || 'Google Drive Attachment'}
-                            </a>
-                          ) : (
-                            <button
-                              onClick={() => {
-                                setDriveCandidateTarget(candidate);
-                                setShowDriveModal(true);
-                              }}
-                              className="text-[11px] text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 flex items-center gap-1"
-                            >
-                              <Icons.Plus /> Attach Google Drive Link
-                            </button>
-                          )}
                         </td>
                         <td className="p-3 text-slate-400">{candidate.appliedDate}</td>
                         <td className="p-3">
@@ -953,14 +941,6 @@ export default function App() {
               </div>
               <div className="flex items-center gap-2">
                 <button
-                  onClick={() => exportDriveDossier(selectedCandidate)}
-                  title="Export Dossier to Google Drive JSON format"
-                  className="p-1.5 rounded-md border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 text-xs flex items-center gap-1"
-                >
-                  <Icons.GoogleDrive />
-                  <Icons.Download />
-                </button>
-                <button
                   onClick={() => setSelectedCandidate(null)}
                   className="p-1.5 rounded-md hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400"
                 >
@@ -987,40 +967,6 @@ export default function App() {
                   <span className={`inline-block font-medium px-2.5 py-1 rounded border ${getStageBadgeStyle(selectedCandidate.stage)}`}>
                     {selectedCandidate.stage}
                   </span>
-                )}
-              </div>
-
-              {/* Google Drive Document Card */}
-              <div className="bg-slate-50 dark:bg-slate-950 p-3.5 rounded-lg border border-slate-200 dark:border-slate-800">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="font-semibold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
-                    <Icons.GoogleDrive /> Google Drive File Attachment
-                  </span>
-                  <button
-                    onClick={() => {
-                      setDriveCandidateTarget(selectedCandidate);
-                      setShowDriveModal(true);
-                    }}
-                    className="text-[11px] text-blue-600 dark:text-blue-400 hover:underline"
-                  >
-                    {selectedCandidate.driveFileUrl ? 'Update Link' : '+ Attach Drive Link'}
-                  </button>
-                </div>
-
-                {selectedCandidate.driveFileUrl ? (
-                  <a
-                    href={selectedCandidate.driveFileUrl}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="flex items-center justify-between p-2 rounded border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 hover:border-blue-400 transition"
-                  >
-                    <span className="font-medium text-slate-800 dark:text-slate-200 truncate pr-2">
-                      {selectedCandidate.driveFileName || 'Google Drive Resume Document'}
-                    </span>
-                    <Icons.ExternalLink />
-                  </a>
-                ) : (
-                  <p className="text-[11px] text-slate-400 italic">No Google Drive document linked to candidate record.</p>
                 )}
               </div>
 
@@ -1152,20 +1098,6 @@ export default function App() {
                     className="w-full p-2 rounded-md border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-white"
                   />
                 </div>
-              </div>
-
-              {/* Google Drive Link Attachment Input */}
-              <div>
-                <label className="block text-slate-600 dark:text-slate-300 font-medium mb-1 flex items-center gap-1.5">
-                  <Icons.GoogleDrive /> Google Drive File Link (Optional)
-                </label>
-                <input
-                  type="url"
-                  value={candidateForm.driveFileUrl}
-                  onChange={e => setCandidateForm({ ...candidateForm, driveFileUrl: e.target.value })}
-                  placeholder="https://drive.google.com/file/d/..."
-                  className="w-full p-2 rounded-md border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-white"
-                />
               </div>
 
               <div>
@@ -1306,52 +1238,6 @@ export default function App() {
 
               <button type="submit" className="w-full bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-900 font-semibold py-2.5 rounded-md transition mt-2">
                 Log Evaluation
-              </button>
-            </form>
-          </div>
-        </div>
-      )}
-
-      {/* MODAL 4: GOOGLE DRIVE ATTACHMENT */}
-      {showDriveModal && driveCandidateTarget && (
-        <div className="fixed inset-0 z-50 glass-backdrop flex items-center justify-center p-4">
-          <div className="bg-white dark:bg-slate-900 rounded-xl max-w-md w-full p-6 shadow-2xl border border-slate-200 dark:border-slate-800">
-            <div className="flex justify-between items-center mb-4">
-              <div className="flex items-center gap-2">
-                <Icons.GoogleDrive />
-                <h3 className="font-semibold text-sm text-slate-900 dark:text-white">Attach Google Drive Document</h3>
-              </div>
-              <button onClick={() => setShowDriveModal(false)} className="text-slate-400 hover:text-slate-600"><Icons.Close /></button>
-            </div>
-            <form onSubmit={handleDriveAttachSubmit} className="space-y-3 text-xs">
-              <p className="text-slate-500 text-xs">
-                Attach a resume, portfolio, or interview transcript from Google Drive for <strong>{driveCandidateTarget.name}</strong>.
-              </p>
-              <div>
-                <label className="block text-slate-600 dark:text-slate-300 font-medium mb-1">Google Drive Shareable Link</label>
-                <input
-                  type="url"
-                  required
-                  value={driveForm.fileUrl}
-                  onChange={e => setDriveForm({ ...driveForm, fileUrl: e.target.value })}
-                  placeholder="https://drive.google.com/file/d/1A2b3C.../view"
-                  className="w-full p-2 rounded-md border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-white"
-                />
-              </div>
-
-              <div>
-                <label className="block text-slate-600 dark:text-slate-300 font-medium mb-1">Document Display Title</label>
-                <input
-                  type="text"
-                  value={driveForm.fileName}
-                  onChange={e => setDriveForm({ ...driveForm, fileName: e.target.value })}
-                  placeholder={`${driveCandidateTarget.name.replace(/\s+/g, '_')}_Resume.pdf`}
-                  className="w-full p-2 rounded-md border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-white"
-                />
-              </div>
-
-              <button type="submit" className="w-full bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-900 font-semibold py-2.5 rounded-md transition mt-2 flex items-center justify-center gap-2">
-                <Icons.GoogleDrive /> Link Google Drive File
               </button>
             </form>
           </div>
